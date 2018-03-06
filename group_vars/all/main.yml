@@ -49,7 +49,7 @@ postgres_port:                "5432"
 # Tell postgres to allow connections from the Discourse server:
 postgres_hosts_allow:         ["<ip>"]
 
-#Configure sql dump file to initialize database
+#Add file path to sql dump. 
 sql_dump: "<your_dump_here>"
 
 #Set this to True if your sql dump has the same email for every user.
