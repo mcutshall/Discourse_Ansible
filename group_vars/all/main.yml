@@ -49,3 +49,11 @@ postgres_port:                "5432"
 # Tell postgres to allow connections from the Discourse server:
 postgres_hosts_allow:         ["<ip>"]
 
+#Configure sql dump file to initialize database
+sql_dump: "<your_dump_here>"
+
+#Set this to True if your sql dump has the same email for every user.
+#By default, askbot.rb will not create users with identical email addresses.
+#If set to True, update roles/db-config/tasks/main.yml line 136 for dev email. 
+update_auth_user: False
+

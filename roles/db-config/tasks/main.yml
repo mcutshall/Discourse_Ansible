@@ -14,7 +14,7 @@
 
 - name: "install sql dump"
   copy:
-    src: "dump.sql"
+    src: "{{ sql_dump }}"
     dest: "/var/www/discourse"
     owner: "discourse"
     group: "discourse"
@@ -27,7 +27,7 @@
   postgresql_db:
     name: postgres
     state: restore
-    target: /var/www/discourse/askdb_dev_dump20170607.sql
+    target: /var/www/discourse/{{ sql_dump }}
   register: updated_with_dump
   changed_when: False
 
@@ -136,6 +136,7 @@
   command: psql -U postgres postgres -c "update auth_user set email = concat('user', '+', id, '@gmail.com');"
   register: emails_updated
   changed_when: False
+  when: {{ update_auth_user }} == True
   # tags:
   #   - "auth_user"
 
