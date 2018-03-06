@@ -12,7 +12,7 @@ Installation Guide:
 
 3. Remote host configuration
 
-            Add remote host variables to inventory/remote.
+            Add remote host ip addresses to inventory/remote.
 
 4. Import script
 
