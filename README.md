@@ -28,8 +28,12 @@ Installation Guide:
   
             Add dev email to roles/db-config/main.yml line 136.
             
-6. Run Ansible playbook:
+6. Run Ansible playbook
            
             sudo ansible-playbook -i inventory/remote -s -K -u <user> master.yml
             -replace <user> with your username.
             
+7. Run development server
+            
+            sudo bundle exec rails s -b 0.0.0.0
+            Access dev site through http://<ip>:3000
