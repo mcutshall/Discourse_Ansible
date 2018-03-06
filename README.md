@@ -27,3 +27,9 @@ Installation Guide:
             For the development environment, all user emails are set to the developer's email address + the user's id.
   
             Add dev email to roles/db-config/main.yml line 136.
+            
+6. Run Ansible playbook:
+           
+            sudo ansible-playbook -i inventory/remote -s -K -u <user> master.yml
+            -replace <user> with your username.
+            
