@@ -2,13 +2,9 @@ Installation Guide:
 
 1. SQL Dump
 
-            Add your .sql dump to roles/db-config/files.
-  
-            Change Ansible task to the name of your sql dump:
-  
-                  roles/db-config/tasks/main.yml line 17
+            Add your .sql dump to group_vars/all/main.yml line 53. 
 
-2. Group Variables
+2. Dev email and postgres password
 
             Add developer email to group_vars/all/main.yml line 6.
   
@@ -20,13 +16,15 @@ Installation Guide:
 
 4. Import script
 
-            Configure askbot.rb import script for your user, host, and password.
+            Modify askbot.rb import script for your user, host, and password.
 
 5. Auth User Emails
 
             For the development environment, all user emails are set to the developer's email address + the user's id.
+            This step is important for development since the askbot import script will not create any users that have 
+            duplicate email addresses. If your sql dump has unique emails for each user then skip this step. 
   
-            Add dev email to roles/db-config/main.yml line 136.
+            Change update_auth_user as necessary in group_vars/all/main.yml line 58.
             
 6. Run Ansible playbook
            
