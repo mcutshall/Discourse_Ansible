@@ -1,0 +1,16 @@
+---
+
+- include: "facts.yml"
+  tags: "always"
+
+- include: "packages-xenial.yml"
+  tags: "opendkim-packages"
+  when: >
+    ansible_os_family == "Debian"
+    and ansible_distribution_version == "16.04"
+
+- include: "configs.yml"
+  tags: "opendkim-configs"
+
+- include: "services.yml"
+  tags: "opendkim-services"

@@ -1,0 +1,8 @@
+---
+
+- name: "install postfix"
+  apt:
+    name: "postfix"
+    state: "present"
+  notify:
+    - "restart postfix"

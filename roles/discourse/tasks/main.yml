@@ -1,0 +1,35 @@
+---
+
+- include: "facts.yml"
+  tags: "always"
+
+- include: "user.yml"
+  tags: "discourse-user"
+
+- include: "packages-xenial.yml"
+  tags: "discourse-packages"
+  when: >
+    ansible_os_family == "Debian"
+    and ansible_distribution_version == "16.04"
+
+- include: "app.yml"
+  tags: "discourse-app"
+
+- include: "bundler.yml"
+  tags: "discourse-bundler"
+
+- include: "npm.yml"
+  tags: "discourse-npm"
+
+- include: "db.yml"
+  tags: "discourse-db"
+
+- include: "multisite.yml"
+  tags: "discourse-multisite"
+  when: discourse_multisite is defined
+
+- include: "assets.yml"
+  tags: "discourse-assets"
+
+- include: "unicorn.yml"
+  tags: "discourse-unicorn"

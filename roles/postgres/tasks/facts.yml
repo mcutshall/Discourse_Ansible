@@ -1,0 +1,19 @@
+---
+
+- name: "check if postgres_version is defined"
+  assert: { that: "postgres_version is defined" }
+
+- name: "check if postgres_password is empty"
+  assert: { that: "postgres_password != ''" }
+
+- name: "set postgres home directory"
+  when: ansible_os_family == "Debian"
+  set_fact:
+    postgres_homedir: "/var/lib/postgresql"
+
+- name: "set OS-specific facts"
+  when: ansible_os_family == "Debian"
+  set_fact:
+    postgres_configs: "/etc/postgresql/{{ postgres_version }}/main"
+    postgres_datadir: "{{ postgres_homedir }}/{{ postgres_version }}/main"
+    postgres_service: "postgresql@{{ postgres_version }}-main.service"

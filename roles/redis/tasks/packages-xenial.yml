@@ -1,0 +1,13 @@
+---
+
+- name: 'enable ppa:chris-lea/redis repository'
+  apt_repository:
+    repo: "deb http://ppa.launchpad.net/chris-lea/redis-server/ubuntu xenial main"
+    state: "present"
+
+- name: "install redis"
+  apt:
+    name: "redis-server"
+    allow_unauthenticated: yes
+    update_cache: True
+    state: "present"

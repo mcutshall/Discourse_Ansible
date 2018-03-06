@@ -1,0 +1,185 @@
+---
+# - name: "install postgres pg_hba.conf"
+#   copy:
+#     src: "pg_hba.conf"
+#     dest: "/etc/postgresql/9.5/main/pg_hba.conf"
+#     owner: discourse
+#     group: discourse
+#     mode: "755"
+#
+# - name: "restart postgres"
+#   command: "pg_ctlcluster 9.5 main reload"
+#   register: pg_hba_updated
+#   changed_when: False
+
+- name: "install sql dump"
+  copy:
+    src: "dump.sql"
+    dest: "/var/www/discourse"
+    owner: "discourse"
+    group: "discourse"
+    mode: "755"
+
+# - name: "update postgres with sql dump"
+#   command: psql -U postgres postgres < askdb_dev_dump20170607.sql
+
+- name: "update postgres with sql dump"
+  postgresql_db:
+    name: postgres
+    state: restore
+    target: /var/www/discourse/askdb_dev_dump20170607.sql
+  register: updated_with_dump
+  changed_when: False
+
+  #update to use files from 'files' folder.
+  #base.rb and askbot.rb(modified from vm)
+
+- name: "delete auto-generated topics - production"
+  #sudo: yes
+  #sudo_user: postgres
+  command: psql -U postgres discourse -c 'DELETE FROM topics WHERE id > 1;'
+  register: deleted_auto_gen_prod
+  changed_when: False
+#    shell: "{{item}}"
+#    with_items:
+#       - psql
+#       - \connect discourse
+#       - DELETE FROM topics WHERE id > 1
+
+- name: "delete auto-generated topics - development"
+  #sudo: yes
+  #sudo_user: postgres
+  command: psql -U postgres discourse_development -c 'DELETE FROM topics WHERE id > 1;'
+  register: deleted_auto_gen_dev
+  changed_when: False
+
+- name: "reset id sequence to 1"
+  command: "{{item}}"
+  with_items:
+    - psql -U postgres discourse -c 'ALTER SEQUENCE topics_id_seq RESTART WITH 1;'
+    - psql -U postgres discourse -c 'UPDATE topics SET id=DEFAULT;'
+    - psql -U postgres discourse_development -c 'ALTER SEQUENCE topics_id_seq RESTART WITH 1;'
+    - psql -U postgres discourse_development -c 'UPDATE topics SET id=DEFAULT;'
+  register: id_reset
+  changed_when: False
+
+- name: "copy tables from postgres db - production"
+  become: yes
+  become_user: postgres
+  shell: pg_dump -t "{{ item }}" postgres | psql discourse
+  with_items:
+    - "askbot_thread"
+    - "askbot_thread_tags"
+    - "tag"
+  register: tables_copied_prod
+  changed_when: False
+    #- "askbot_thread"
+    #- "askbot_thread_tags"
+    #- "tag"
+
+- name: "copy tables from postgres db - development"
+  become: yes
+  become_user: postgres
+  shell: pg_dump -t "{{ item }}" postgres | psql discourse_development
+  with_items:
+    - "askbot_thread"
+    - "askbot_thread_tags"
+    - "tag"
+  register: tables_copied_dev
+  changed_when: False
+
+
+- name: "alter non-null constraints - production"
+  command: psql -U postgres discourse -c "{{ item }}"
+  with_items:
+    - "ALTER TABLE tags ALTER COLUMN created_at DROP NOT NULL;"
+    - "ALTER TABLE tags ALTER COLUMN updated_at DROP NOT NULL;"
+    - "ALTER TABLE topic_tags ALTER COLUMN created_at DROP NOT NULL;"
+    - "ALTER TABLE topic_tags ALTER COLUMN updated_at DROP NOT NULL;"
+  register: remove_null_prod
+  changed_when: False
+
+- name: "alter non-null constraints - development"
+  command: psql -U postgres discourse_development -c "{{ item }}"
+  with_items:
+    - "ALTER TABLE tags ALTER COLUMN created_at DROP NOT NULL;"
+    - "ALTER TABLE tags ALTER COLUMN updated_at DROP NOT NULL;"
+    - "ALTER TABLE topic_tags ALTER COLUMN created_at DROP NOT NULL;"
+    - "ALTER TABLE topic_tags ALTER COLUMN updated_at DROP NOT NULL;"
+  register: remove_null_dev
+  changed_when: False
+
+- name: "copy tags to discourse"
+  command: psql -U postgres discourse -c "{{ item }}"
+  with_items:
+    - "INSERT INTO tags(id, name, topic_count) SELECT id, name, used_count FROM tag;"
+    - "INSERT INTO topic_tags(id, topic_id, tag_id) SELECT id, thread_id, tag_id FROM askbot_thread_tags;"
+  # vars:
+  #    tags_copied: true
+  # when: not tags_copied
+  register: tags_copied_prod
+  changed_when: False
+
+- name: "copy tags to discourse_development"
+  command: psql -U postgres discourse_development -c "{{ item }}"
+  with_items:
+    - "INSERT INTO tags(id, name, topic_count) SELECT id, name, used_count FROM tag;"
+    - "INSERT INTO topic_tags(id, topic_id, tag_id) SELECT id, thread_id, tag_id FROM askbot_thread_tags;"
+  # vars:
+  #   dev_tags_copied: true
+  # when: not dev_tags_copied
+  register: tags_copied_dev
+  changed_when: False
+
+- name: "update auth_user emails"
+  #insert dev email on next line. Ex: user@gmail.com becomes concat('user', '+', id, '@gmail.com')
+  command: psql -U postgres postgres -c "update auth_user set email = concat('user', '+', id, '@gmail.com');"
+  register: emails_updated
+  changed_when: False
+  # tags:
+  #   - "auth_user"
+
+- name: "install askbot import script"
+  copy:
+    src: "askbot.rb"
+    dest: "/var/www/discourse/script/import_scripts"
+    owner: "discourse"
+    group: "discourse"
+    mode: "755"
+    force: yes
+
+- name: "change public directory owner"
+  command: chown -R discourse /var/www/discourse
+  become: yes
+  # tags:
+  #   - "askbot"
+  register: chowned
+  changed_when: False
+
+- name: "grant discourse access to public schema"
+  command: psql -U postgres -c "grant all privileges on all tables in schema public to discourse;"
+  #tags:
+  #  - "askbot"
+  register: table_access
+  changed_when: False
+
+- name: "run askbot import script - production"
+  become: yes
+  become_user: discourse
+  command: "bundle exec ruby askbot.rb"
+  environment:
+    RAILS_ENV: production
+  args:
+    chdir: "/var/www/discourse/script/import_scripts"
+  #tags:
+  #  - "askbot"
+
+- name: "run askbot import script - development"
+  become: yes
+  command: "bundle exec ruby askbot.rb"
+  environment:
+    RAILS_ENV: development
+  args:
+    chdir: "/var/www/discourse/script/import_scripts"
+  tags:
+   - "askbot_dev"

@@ -1,0 +1,60 @@
+---
+
+- name: "install unbound as a local DNSSEC-validating resolver"
+  hosts: "all"
+  become: True
+  gather_facts: True
+
+  roles:
+    - role: "unbound"
+      tags: ["unbound"]
+
+
+- name: "install postgres for use with discourse"
+  hosts: "postgres"
+  become: True
+  gather_facts: True
+
+  roles:
+    - role: "postgres-discourse"
+      tags: ["postgres-discourse"]
+
+
+- name: "install and configure redis"
+  hosts: "redis"
+  become: True
+  gather_facts: True
+
+  roles:
+    - role: "redis"
+      tags: ["redis"]
+
+
+- name: "install discourse, unicorn and nginx"
+  hosts: "discourse"
+  become: True
+  gather_facts: True
+
+  roles:
+    - role: "discourse"
+      tags: ["discourse"]
+
+    - role: "nginx-discourse"
+      tags: ["nginx-discourse"]
+
+    - role: "opendkim"
+      tags: ["opendkim"]
+      when: discourse_smtp_address == 'localhost' and dkim_enabled
+
+    - role: "postfix"
+      tags: ["postfix"]
+      when: discourse_smtp_address == 'localhost'
+
+- name: "modify discoure database"
+  hosts: "all"
+  become: True
+  gather_facts: True
+
+  roles:
+    - role: "db-config"
+      tags: ["db-config"]

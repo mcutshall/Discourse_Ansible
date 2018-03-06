@@ -1,0 +1,64 @@
+---
+
+- name: "assert that rbenv_ruby_version is defined"
+  assert: { that: "rbenv_ruby_version is defined" }
+
+- name: "assert that rbenv_user is defined"
+  assert: { that: "rbenv_user is defined" }
+
+- name: "https://github.com/sstephenson/rbenv"
+  sudo: true
+  git:
+    repo: "https://github.com/sstephenson/rbenv.git"
+    dest: "{{ rbenv_home }}/.rbenv"
+    version: "{{ rbenv_version }}"
+    force: True
+  #sudo_user: "{{ rbenv_user }}"
+
+- name: "https://github.com/sstephenson/ruby-build"
+  sudo: true
+  git:
+    repo: "https://github.com/sstephenson/ruby-build.git"
+    dest: "{{ rbenv_home }}/.rbenv/plugins/ruby-build"
+    version: "{{ rbenv_ruby_build_version }}"
+    force: True
+  #sudo_user: "{{ rbenv_user }}"
+
+- name: "check ruby install"
+  sudo: true
+  stat:
+    path: /root/.rbenv/versions/2.1.0
+  register: ruby_stat
+
+- name: "install ruby with rbenv"
+  command: >
+    /usr/bin/ionice -c 3 /usr/bin/nice -n 19
+    /usr/bin/rbenv install 2.1.0
+  when: ruby_stat == False
+  args:
+    creates: "{{ rbenv_home }}/.rbenv/versions/{{ rbenv_ruby_version }}"
+    #when: not st.stat.exists
+  environment:
+    MAKE_OPT: "{{ rbenv_make_opt }}"
+  #sudo_user: "{{ rbenv_user }}"
+  notify:
+    - "reload_services"
+    - "restart_services"
+  # {{ rbenv_home }}/.rbenv/bin/rbenv install {{ rbenv_ruby_version }}
+
+- name: "rbenv rehash"
+  sudo: true
+  command: "{{ rbenv_home }}/.rbenv/bin/rbenv rehash"
+  #sudo_user: "{{ rbenv_user }}"
+  changed_when: False
+
+- name: "set global ruby version"
+  template:
+    src: "ruby-version.j2"
+    dest: "{{ rbenv_home }}/.rbenv/version"
+    owner: "{{ rbenv_user }}"
+    group: "{{ rbenv_user }}"
+    mode: "0644"
+  notify:
+    - "reload services"
+    - "restart services"

@@ -1,0 +1,6 @@
+---
+
+- name: "set BASH profile"
+  when: ansible_os_family == "Debian"
+  set_fact:
+    bash_profile: ".profile"

@@ -1,0 +1,10 @@
+---
+
+- name: "check if postgres_version is defined"
+  assert: { that: "postgres_version is defined" }
+
+- name: "set OS-specific facts"
+  when: ansible_os_family == "Debian"
+  set_fact:
+    libexecdir: "lib"
+    sysconfig_directory: "/etc/default"

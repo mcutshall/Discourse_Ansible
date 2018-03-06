@@ -1,0 +1,171 @@
+---
+
+- name: "check if postgres_password is empty"
+  assert: { that: "postgres_password != ''" }
+
+- name: "enable postgres"
+  service:
+    name: "{{ postgres_service }}"
+    enabled: True
+
+- name: "start postgres"
+  service:
+    name: "{{ postgres_service }}"
+    state: "started"
+  register: start_postgres
+  #become: yes
+  #become_user: cutshall
+  #when: state == "stopped"
+
+- name: "wait for postgres to start"
+  when: start_postgres.changed
+  pause:
+    seconds: "10"
+
+#- name: "install postgresql.conf"
+#  template:
+#    src: "postgresql.conf.j2"
+#    dest: "{{ postgres_configs }}/postgresql.conf"
+#    owner: "postgres"
+#    group: "postgres"
+#    mode: "0600"
+
+- name: "create discourse database"
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    name: discourse
+    encoding: "{{ postgres_encoding }}"
+    lc_collate: "{{ postgres_locale }}"
+    lc_ctype: "{{ postgres_locale }}"
+  #sudo_user: "postgres"
+
+- name: "create discourse database user"
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "discourse"
+    db: "discourse"
+    priv: "ALL"
+    password: "{{ postgres_password }}"
+  #sudo_user: "postgres"
+
+#- name: "change public schema"
+#  become: yes
+#  become_user: postgres
+#  command: psql discourse -c "revoke all on schema public from public;"
+#  command: psql discourse -c "grant all on schema public to discourse;"
+  #with_items:
+  #- "REVOKE ALL ON schema public FROM public;"
+  #- "GRANT ALL ON schema public TO discourse;"
+  #always_run: True
+  ignore_errors: True
+  
+- name: "check if discourse user owns public schema"
+  command:
+    psql discourse -c 
+    "COPY (
+    SELECT schema_owner
+    FROM information_schema.schemata
+    WHERE schema_name='public'
+    ) TO STDOUT;"
+  always_run: True
+  ignore_errors: True
+  changed_when: False
+  become: yes
+  become_user: postgres
+  #become_method: sudo
+  register: public_schema_owner
+
+- name: "ALTER SCHEMA public OWNER TO discourse"
+  when: >
+    public_schema_owner is not defined
+    or public_schema_owner.stdout != "discourse"
+  command: 
+    psql discourse -c
+    "ALTER SCHEMA public OWNER TO discourse;"
+  become: yes
+  become_user: postgres
+
+- name: "check if template1 has extension hstore"
+  command:
+    psql template1 -c
+    "COPY (
+    SELECT EXISTS ( SELECT 1 FROM pg_extension WHERE extname='hstore' )
+    ) TO STDOUT;"
+  always_run: True
+  ignore_errors: True
+  changed_when: False
+  become: yes
+  become_user: postgres
+  register: template1_hstore
+
+- name: "template1 create extension hstore"
+  when: template1_hstore is not defined or template1_hstore.stdout != "t"
+  command: 
+    psql template1 -c
+    "CREATE EXTENSION IF NOT EXISTS hstore;"
+  become: yes
+  become_user: postgres
+
+- name: "check if template1 has extension pg_trgm"
+  command:
+    psql template1 -c
+    "COPY (
+    SELECT EXISTS ( SELECT 1 FROM pg_extension WHERE extname='pg_trgm' )
+    ) TO STDOUT;"
+  always_run: True
+  ignore_errors: True
+  changed_when: False
+  become: yes
+  become_user: postgres
+  register: template1_pg_trgm
+
+- name: "template1 create extension pg_trgm"
+  when: template1_pg_trgm is not defined or template1_pg_trgm.stdout != "t"
+  command:
+    psql template1 -c
+    "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+  become: yes
+  become_user: postgres
+
+- name: "check if discourse has extension hstore"
+  command: 
+    psql discourse -c
+    "COPY (
+    SELECT EXISTS ( SELECT 1 FROM pg_extension WHERE extname='hstore' )
+    ) TO STDOUT;"
+  always_run: True
+  changed_when: False
+  become: yes
+  become_user: postgres
+  register: discourse_hstore
+
+- name: "discourse create extension hstore"
+  when: discourse_hstore is not defined or discourse_hstore.stdout != "t"
+  command:
+    psql discourse -c
+    "CREATE EXTENSION IF NOT EXISTS hstore;"
+  become: yes
+  become_user: postgres
+
+- name: "check if discourse has extension pg_trgm"
+  command:
+    psql discourse -c
+    "COPY (
+    SELECT EXISTS ( SELECT 1 FROM pg_extension WHERE extname='pg_trgm' )
+    ) TO STDOUT;"
+  always_run: True
+  ignore_errors: True
+  changed_when: False
+  become: yes
+  become_user: postgres
+  register: discourse_pg_trgm
+
+- name: "discourse create extension pg_trgm"
+  when: discourse_pg_trgm is not defined or discourse_pg_trgm.stdout != "t"
+  command:
+    psql discourse -c
+    "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+  become: yes
+  become_user: postgres

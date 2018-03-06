@@ -1,0 +1,15 @@
+---
+
+- name: "check if postgres_version is defined"
+  assert: { that: "postgres_version is defined" }
+
+- name: "check if postgres_version is 9.5"
+  assert: { that: "postgres_version == '9.5'" }
+
+- name: "set facts"
+  set_fact:
+    postgres_old: "9.3"
+    postgres_new: "9.5"
+
+- include: "debian.yml"
+  when: ansible_os_family == "Debian"

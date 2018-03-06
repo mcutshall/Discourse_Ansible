@@ -1,0 +1,7 @@
+---
+
+- include: "repo-xenial.yml"
+  tags: "postgres-repo"
+  when: >
+    ansible_os_family == "Debian"
+    and ansible_distribution_major_version == "16.04"

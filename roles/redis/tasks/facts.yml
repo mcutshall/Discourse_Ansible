@@ -1,0 +1,7 @@
+---
+
+- name: "set OS-specific facts"
+  when: ansible_os_family == "Debian"
+  set_fact:
+    redis_config: "/etc/redis/redis.conf"
+    redis_service: "redis-server.service"

@@ -1,0 +1,11 @@
+---
+
+- name: "install npm modules"
+  npm:
+    name: "{{ item }}"
+    production: True
+    path: "/home/discourse"
+  #sudo_user: "discourse"
+  with_items:
+    - "svgo"
+    - "uglify-js@2"

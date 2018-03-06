@@ -1,0 +1,8 @@
+[postgres]
+<ip>
+
+[redis]
+<ip>
+
+[discourse]
+<ip>

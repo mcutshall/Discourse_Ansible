@@ -1,0 +1,26 @@
+---
+
+- name: "create rbenv user"
+  user:
+    name: "{{ rbenv_user }}"
+    home: "{{ rbenv_home }}"
+    shell: "/bin/bash"
+
+- name: "export PATH"
+  lineinfile:
+    #dest: "home/cutshall/Documents/discourse"
+    dest: "{{ rbenv_home }}/{{ bash_profile }}"
+    line: "export PATH"
+    insertafter: "EOF"
+
+- name: "set PATH=$HOME/.rbenv/bin:$PATH"
+  lineinfile:
+    dest: "{{ rbenv_home }}/{{ bash_profile }}"
+    line: "PATH=$HOME/.rbenv/bin:$PATH"
+    insertbefore: "^export PATH$"
+
+- name: "enable shims and autocompletion"
+  lineinfile:
+    dest: "{{ rbenv_home }}/{{ bash_profile }}"
+    line: 'eval "$(rbenv init -)"'
+    insertafter: "EOF"

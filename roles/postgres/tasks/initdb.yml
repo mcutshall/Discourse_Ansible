@@ -1,0 +1,20 @@
+---
+
+- name: "run locale-gen"
+  when: ansible_distribution == "Debian"
+  locale_gen:
+    name: "{{ postgres_locale }}"
+    state: "present"
+
+- name: "initialize database"
+  when: ansible_os_family == "Debian"
+  command: >
+    /usr/bin/pg_createcluster
+    --locale={{ postgres_locale }}
+    --encoding={{ postgres_encoding }}
+    {{ postgres_version }} main
+  args:
+    creates: "{{ postgres_datadir }}/PG_VERSION"
+  environment:
+    LANG: "{{ postgres_locale }}"
+    LC_ALL: "{{ postgres_locale }}"

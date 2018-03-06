@@ -1,0 +1,13 @@
+---
+
+- include: "packages-xenial.yml"
+  tags: "unbound-packages"
+  when: >
+    ansible_os_family == "Debian"
+    and ansible_distribution_version == "16.04"
+
+- include: "configs.yml"
+  tags: "unbound-configs"
+
+- include: "services.yml"
+  tags: "unbound-services"
