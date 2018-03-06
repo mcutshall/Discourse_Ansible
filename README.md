@@ -2,7 +2,7 @@ Installation Guide:
 
 1. SQL Dump
 
-            Add your .sql dump to group_vars/all/main.yml line 53. 
+            Add your sql dump to group_vars/all/main.yml line 53. 
 
 2. Dev email and postgres password
 
@@ -19,10 +19,10 @@ Installation Guide:
             Modify askbot.rb import script for your user, host, and password.
 
 5. Auth User Emails
-
-            For the development environment, all user emails are set to the developer's email address + the user's id.
-            This step is important for development since the askbot import script will not create any users that have 
-            duplicate email addresses. If your sql dump has unique emails for each user then skip this step. 
+            
+            If your sql dump has the same email for every user, then the askbot.rb import script will not create
+            any users. This is fixed by setting all user emails to the developers email address + each user's id. 
+            If your sql dump has unique emails for each user then skip this step. 
   
             Change update_auth_user as necessary in group_vars/all/main.yml line 58.
             
