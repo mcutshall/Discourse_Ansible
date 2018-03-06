@@ -8,7 +8,7 @@ class ImportScripts::MyAskBot < ImportScripts::Base
 
   OLD_SITE   = "ask.cyverse.org"
   DB_NAME    = "postgres"
-  DB_USER    = "cutshall"
+  DB_USER    = "user"
   DB_PORT    = 5432
   DB_HOST    = "localhost"
   DB_PASS    = "password"
