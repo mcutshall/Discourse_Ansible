@@ -136,7 +136,7 @@
   command: psql -U postgres postgres -c "update auth_user set email = concat('user', '+', id, '@gmail.com');"
   register: emails_updated
   changed_when: False
-  when: {{ update_auth_user }} == True
+  when: update_auth_user == true
   # tags:
   #   - "auth_user"
 
