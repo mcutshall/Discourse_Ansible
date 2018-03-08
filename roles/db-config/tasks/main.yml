@@ -1,33 +1,17 @@
 ---
-# - name: "install postgres pg_hba.conf"
-#   copy:
-#     src: "pg_hba.conf"
-#     dest: "/etc/postgresql/9.5/main/pg_hba.conf"
-#     owner: discourse
-#     group: discourse
-#     mode: "755"
-#
-# - name: "restart postgres"
-#   command: "pg_ctlcluster 9.5 main reload"
-#   register: pg_hba_updated
-#   changed_when: False
-
 - name: "install sql dump"
   copy:
-    src: "{{ sql_dump }}"
+    src: "{{ sql_dump_file_path }}"
     dest: "/var/www/discourse"
     owner: "discourse"
     group: "discourse"
     mode: "755"
 
-# - name: "update postgres with sql dump"
-#   command: psql -U postgres postgres < askdb_dev_dump20170607.sql
-
 - name: "update postgres with sql dump"
   postgresql_db:
     name: postgres
     state: restore
-    target: /var/www/discourse/{{ sql_dump }}
+    target: /var/www/discourse/{{ sql_dump_file_name }}
   register: updated_with_dump
   changed_when: False
 
