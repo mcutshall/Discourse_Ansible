@@ -70,28 +70,16 @@
   local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=20
   become: no
 
-#- name: "reload cluster"
-#  command: "pg_ctlcluster 9.5 main reload"
-#  args:
-#    chdir: "/var/www/discourse"
-#  tags:
-#    - "rake"
+- name: "reconnect to postgres"
+  local_action: wait_for host={{ inventory_hostname }} port=5432 state=started delay=20
+  become: no
 
-# - name: "create root user"
-#   command: psql -U postgres -c 'create user root with superuser createdb;'
-#   when: not role "root" already exists
-#   register: created_root
-#   changed_when: False
-#   tags:
-#     - "root"
-
-- name: "create root user - production"
+- name: "create root user"
   postgresql_user:
-    db: discourse
     name: root
     password: "{{ postgres_password }}"
-    priv: ALL
-  register: created_root_prod
+    role_attr_flags: CREATEDB,SUPERUSER
+  register: created_root_dev
   changed_when: False
 
 - name: "rake db development"
@@ -102,15 +90,6 @@
   tags:
     - "rake"
   register: rake_db_migrate_dev
-  changed_when: False
-
-- name: "create root user - development"
-  postgresql_user:
-    db: discourse_development
-    name: root
-    password: "{{ postgres_password }}"
-    priv: ALL
-  register: created_root_dev
   changed_when: False
 
 - name: "rake db production"
