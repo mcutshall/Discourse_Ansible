@@ -33,5 +33,7 @@ Installation Guide:
             
 7. Run development server
             
+            cd /var/www/discourse
             sudo bundle exec rails s -b 0.0.0.0
+            
             Access dev site through http://<remote_ip>:3000
