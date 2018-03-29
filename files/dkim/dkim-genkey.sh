@@ -9,7 +9,7 @@ Usage: dkim_genkey.sh DOMAIN SELECTOR
 
 Examples:
     Create a key pair
-    dkim_genkey.sh discourse.jamielinux.com discourse-20150601
+    dkim_genkey.sh discourse.example.com discourse-20150601
 
 EOF
 }
