@@ -16,7 +16,7 @@ Installation Guide:
 
 4. Import script
 
-            Modify askbot.rb import script for your user, host, and password.
+            Modify roles/db-config/files/askbot.rb import script for your user, host, and password.
 
 5. Auth User Emails
             
